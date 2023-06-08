@@ -1,22 +1,69 @@
 <?php
 include('include/Connection.php');
+// if (isset($_POST['login'])) {
+//   extract($_POST);
+//   $sel = "SELECT * from user_login where User_Name='" . $username . "' and Password='" . $psw . "'";
+//   $info = $db->query($sel);
+//   $row = $info->fetch_object();
+//   if ($info->num_rows > 0) {
+//     $valid = true;
+//     session_start();
+//     $_SESSION['USER_Portal'] = true;
+//     $_SESSION['User_id'] = $row->ID;
+//     $_SESSION['User_NAME'] = $row->User_Name;
+//     $_SESSION['Password'] = $row->Password;
+//     header("location:User/index.php");
+//   } else {
+//     $valid = false;
+//   }
+// }
+
+// Mendapatkan data dari form login
 if (isset($_POST['login'])) {
-  extract($_POST);
-  $sel = "SELECT * from user_login where User_Name='" . $username . "' and Password='" . $psw . "'";
-  $info = $db->query($sel);
-  $row = $info->fetch_object();
-  if ($info->num_rows > 0) {
+  $username = $_POST['username'];
+  $psw = $_POST['psw'];
+
+  // Cek apakah user adalah admin atau pengguna biasa
+  $query = "SELECT * from user_login where User_Name='" . $username . "' and Password='" . $psw . "'";
+  $result = mysqli_query($db, $query);
+  $row = mysqli_fetch_assoc($result);
+
+  if ($result->num_rows > 0) {
+    // User ditemukan di tabel "user"
     $valid = true;
     session_start();
     $_SESSION['USER_Portal'] = true;
-    $_SESSION['User_id'] = $row->ID;
-    $_SESSION['User_NAME'] = $row->User_Name;
-    $_SESSION['Password'] = $row->Password;
+    $_SESSION['User_id'] = $row['ID'];
+    $_SESSION['User_NAME'] = $row['User_Name'];
+    $_SESSION['Password'] = $row['Password'];
     header("location:User/index.php");
   } else {
-    $valid = false;
+    // Cek apakah user adalah admin
+    $query = "SELECT * from admin_login where Adm_Name='" . $username . "' and Adm_Password='" . $psw . "'";
+    $result = mysqli_query($db, $query);
+    $row = mysqli_fetch_assoc($result);
+    if ($result->num_rows > 0) {
+      //perintah untuk memasukan file header,db,function 
+      include('header.php');
+      // menginclude file header 
+      include('include/db.php');
+      // menginclude file db 
+      include('include/function.php');
+      // menginclude file function 
+      // Login berhasil, simpan data admin ke sesi
+      session_start();
+      $_SESSION['Admin_Portal'] = true;
+      $_SESSION['ID'] = $row['ID'];
+      $_SESSION['Password'] = $row['Adm_Password'];
+      header("location:admin_portal/index.php");
+    } else {
+      // User tidak ditemukan
+      $valid = false;
+    }
   }
 }
+?>
+
 ?>
 <!DOCTYPE html>
 <html>
@@ -59,9 +106,9 @@ if (isset($_POST['login'])) {
                 Username dan Nomor hp salah
               </div>
             <?php } ?>
-            <form role="form" method="post" action="">
+            <form role="form" method="POST" action="">
               <div class="form-group">
-                <label for="usrname"> Username</label>
+                <label for="username"> Username</label>
                 <input type="text" class="form-control" name="username" required="" placeholder="Masukan Username">
               </div>
               <div class="form-group">
